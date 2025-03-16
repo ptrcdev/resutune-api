@@ -1,4 +1,4 @@
-import { Controller, Post, UploadedFile, UseInterceptors, Body, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, UploadedFile, UseInterceptors, Body, HttpException, HttpStatus, Get } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as pdfParse from 'pdf-parse';
 
@@ -38,5 +38,10 @@ export class ResumeController {
     } catch (error) {
       throw new HttpException('Error processing resume: ' + error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  @Get()
+  getHello(): string {
+    return 'Hello World!';
   }
 }
