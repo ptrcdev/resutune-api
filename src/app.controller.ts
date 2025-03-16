@@ -20,7 +20,7 @@ export class ResumeController {
       const resumeText = data.text;
       
       // Call the Python API with the resumeText and jobText
-      const pythonResponse = await fetch("http://localhost:8000/analyze-resume", {
+      const pythonResponse = await fetch(`${process.env.PYTHON_API_URL}/analyze-resume`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
