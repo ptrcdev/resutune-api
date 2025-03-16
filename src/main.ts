@@ -4,9 +4,11 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: "https://resutune-taupe.vercel.app", // adjust as needed or use a wildcard during development
+    origin: process.env.ALLOWED_ORIGINS || '*',
     credentials: true,
   });
-  await app.listen(process.env.PORT ?? 3100);
+  const port = process.env.PORT || 3100;
+  await app.listen(port);
+  console.log(`Nest application is running on: ${await app.getUrl()}`);
 }
 bootstrap();
