@@ -56,8 +56,8 @@ This API allows users to upload their resumes (in PDF, DOC, DOCX, or TXT format)
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/resume-analyzer-api.git
-   cd resume-analyzer-api
+   git clone git@github.com:ptrcdev/resutune-api.git
+   cd resutune-api
    ```
 
 2. **Install dependencies:**
