@@ -1,99 +1,145 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Resume Analyzer NestJS API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS-based backend service that handles resume file uploads, parses resume content, and forwards data to a Python-based analysis service. This API acts as an intermediary between the frontend and the NLP analysis service, enabling file parsing, error handling, and secure communication.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## Table of Contents
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- [Overview](#overview)
+- [Features](#features)
+- [Technologies](#technologies)
+- [Setup and Installation](#setup-and-installation)
+  - [Environment Variables](#environment-variables)
+- [Usage](#usage)
+- [Deployment](#deployment)
+- [Future Improvements](#future-improvements)
+- [License](#license)
 
-## Project setup
+---
 
-```bash
-$ pnpm install
-```
+## Overview
 
-## Compile and run the project
+This API allows users to upload their resumes (in PDF, DOC, DOCX, or TXT format) via a file upload endpoint. The service uses Multer with memory storage to process the uploaded file, then parses it (using libraries such as `pdf-parse` for PDFs) to extract the resume text. Once the text is extracted, the API forwards the resume text along with a job description to a separate Python analysis service. The response from the Python service (which includes detailed metrics, scores, and OpenAI-generated feedback) is returned to the client.
 
-```bash
-# development
-$ pnpm run start
+---
 
-# watch mode
-$ pnpm run start:dev
+## Features
 
-# production mode
-$ pnpm run start:prod
-```
+- **File Upload & Parsing:**  
+  Handles file uploads with Multer using in-memory storage and parses resumes with appropriate parsers (e.g., `pdf-parse`).
 
-## Run tests
+- **API Gateway:**  
+  Acts as an intermediary that forwards parsed resume text and job descriptions to the Python analysis API.
 
-```bash
-# unit tests
-$ pnpm run test
+- **Error Handling:**  
+  Returns meaningful error messages when file uploads or API calls fail.
 
-# e2e tests
-$ pnpm run test:e2e
+- **CORS Support:**  
+  Configured to allow requests from your frontend application.
 
-# test coverage
-$ pnpm run test:cov
-```
+---
+
+## Technologies
+
+- **NestJS:** A progressive Node.js framework for building efficient, scalable server-side applications.
+- **Multer:** Middleware for handling multipart/form-data (used for file uploads).
+- **pdf-parse:** Library for parsing PDF files and extracting text.
+- **Node-Fetch:** (or built-in global fetch in newer Node versions) Used to call the Python analysis service.
+- **TypeScript:** Provides strong typing and modern JavaScript features.
+- **dotenv:** Manages environment variables during development.
+
+---
+
+## Setup and Installation
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/your-username/resume-analyzer-api.git
+   cd resume-analyzer-api
+   ```
+
+2. **Install dependencies:**
+
+   ```bash
+   pnpm install
+   ```
+
+3. **Configure Multer to use Memory Storage:**
+
+   Ensure your MulterModule is configured in your NestJS module (e.g., in app.module.ts):
+
+   ```typescript
+   import { Module } from '@nestjs/common';
+   import { MulterModule } from '@nestjs/platform-express';
+   import * as multer from 'multer';
+   import { ResumeController } from './resume.controller';
+
+   @Module({
+     imports: [
+       MulterModule.register({
+         storage: multer.memoryStorage(),
+       }),
+      ],
+      controllers: [ResumeController],
+    })
+    export class AppModule {}
+    ```
+
+4. **Environment Variables:**
+
+   Create a `.env` file in the root directory of the project and add the following variables:
+
+   ```env
+   PORT=3100
+   PYTHON_API_URL=http://localhost:8000
+   ALLOWED_ORIGINS=http://localhost:8080 # your frontend URL
+   ```
+  These variables are used for setting the listening port, the URL to your Python analysis service, and configuring CORS.
+
+## Usage
+### Running Locally
+
+1. **Start the application:**
+
+   ```bash
+   pnpm run start:dev
+   ```
+
+2. **API Endpoints:**
+
+    ```http
+    POST /upload
+    ```
+    Accepts file uploads. This endpoint expects a multipart/form-data request with:
+
+    - **file:** The resume file.
+    - **jobText:** A string containing the job description.
+    - **resumeText:** (optional) The resume text (used when no file is provided).
+
+    **Example using curl:**
+
+    ```bash
+    curl -X POST "http://localhost:3100/upload" \
+      -F "file=@/path/to/your/resume.pdf" \
+      -F "jobText=Your job description text here..."
+    ```
+
+    The endpoint parses the file, extracts the resume text, forwards the data to the Python API, and returns the analysis result.
 
 ## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+  This app is deployed on Railway.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Future Improvements
+- Enhanced File Parsing:
+  Add support for more file types and integrate more robust parsing libraries.
+- Authentication:
+  Secure the endpoints with JWT or another authentication method.
+- Improved Logging & Monitoring:
+  Integrate logging and error tracking to better diagnose issues in production.
+- Rate Limiting:
+  Implement rate limiting to prevent abuse of the API.
+- CI/CD Pipeline:
+  Set up GitHub Actions for automated testing and deployment.
